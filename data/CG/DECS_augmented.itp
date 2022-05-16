@@ -1,0 +1,30 @@
+;;;;;; Martini lipid topology for sodium dodecyl sulfate
+;
+; Description:
+;   A Martini model sodium dodecyl sulfate (SDS)
+; Parameterization:
+;   This topology was backmapped from an atomistic simulation of SDS surfactants, but has not been tested for 
+;   other properties.
+;
+
+[ moleculetype ]
+; molname      nrexcl
+   DS         1
+
+[ atoms ]
+; id 	type 	resnr 	residu 	atom 	cgnr 	charge   mass
+  1        Q2      1   DS    SO3     1       -1.0       ;  96.0576  
+  2        C1      1   DS    C1      2          0       ;  56.108
+  3        C1      1   DS    C2      3          0       ;  56.108
+  4        TC1     1   DS    C3      4          0       ;  57.116
+
+[ bonds ]
+; i j 	funct 	length 	force.c.
+  1  2 	1 	0.470 	10000
+  2  3 	1 	0.531	1250
+  3  4 	1 	0.403	1250
+
+[ angles ]
+; i j k 	funct 	angle 	force.c.
+  1  2  3 	2 	170.0 	15.0
+  2  3  4 	2 	180.0 	25.0
