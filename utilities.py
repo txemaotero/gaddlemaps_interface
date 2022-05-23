@@ -1,4 +1,5 @@
 from typing import IO, Optional
+from gaddlemaps import Alignment
 
 import py3Dmol
 import tempfile
@@ -93,3 +94,16 @@ def write_and_get_file(uploaded_file: Optional[IO[bytes]]) -> Optional[IO[bytes]
     temp.write(text)
     temp.seek(0)
     return temp
+
+
+class GlobalInformation:
+    def __init__(self):
+        self.system = None
+        self.molecule_correspondence: dict[str, Alignment] = {}
+        self.page = 0
+    
+    def next_page(self):
+        self.page += 1
+        
+    def previous_page(self):
+        self.page -= 1
