@@ -2,8 +2,13 @@ import streamlit as st
 import py3Dmol
 from stmol import showmol
 import tempfile
+
 from gaddlemaps.components import System
 
+from multipage import MultiPage
+
+def test_app():
+    st.markdown("## Test page")
 
 def get_mol_view(gro_content, width=400, height=400):
     view = py3Dmol.view(width=width, height=height)
@@ -32,27 +37,12 @@ def write_and_get_fname(uploaded_file):
     return temp
 
 st.set_page_config(layout="wide")
-st.title('GaddleMaps Interface')
 
-cg_system_gro = st.file_uploader("Choose a .gro file with the CG systems", type=["gro"])
+# Create an instance of the app 
+app = MultiPage({"Test page": test_app}, "Select a page")
 
-if cg_system_gro is not None:
-    sys_gro_name = write_and_get_fname(cg_system_gro)
-    system = System(sys_gro_name.name)
-    st.write(system.system_gro.composition)
+# Title of the main page
+st.title("Gaddle Maps Interface")
 
-    itp_files = st.file_uploader("Upload topologies to recognize molecules", type=["itp", "top"], accept_multiple_files=True)
-    for itp in itp_files:
-        fopen = write_and_get_fname(itp)
-        system.add_ftop(fopen.name)
-    st.write(system.composition)
-
-    cols = st.columns(3)
-    for index, mol in enumerate(system.different_molecules):
-        lines = ['test', f'{len(mol)}']
-        lines += [a.gro_line(parsed=False) for a in mol] + ['    0.0000    0.0000    0.0000']
-        gro_content = '\n'.join(lines)
-        view = get_mol_view(gro_content)
-        with cols[index % 3]:
-            st.markdown(f'## {index+1}: {mol.name}')
-            showmol(view, height=400, width=400)
+# The main app
+app.run()
