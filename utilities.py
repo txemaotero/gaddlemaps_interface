@@ -8,6 +8,9 @@ from gaddlemaps.components import Molecule
 from stmol import showmol
 
 
+Restrictions = dict[str, Optional[list[tuple[int, int]]]]
+
+
 def get_mol_view(
     gro_content: str, width: int = 400, height: int = 400, style: dict = None
 ) -> py3Dmol.view:
@@ -45,7 +48,7 @@ def get_mol_view(
         True,
         """function(atom,viewer,event,container) {
                    if(!atom.label) {
-                    atom.label = viewer.addLabel(atom.index,{position: atom, backgroundColor: 'mintcream', fontColor:'black'});
+                    atom.label = viewer.addLabel(atom.index+1,{position: atom, backgroundColor: 'mintcream', fontColor:'black'});
                    }}""",
         """function(atom,viewer) { 
                    if(atom.label) {
@@ -98,12 +101,14 @@ def write_and_get_file(uploaded_file: Optional[IO[bytes]]) -> Optional[IO[bytes]
 
 class GlobalInformation:
     def __init__(self):
+        print('Initializing')
         self.system = None
         self.molecule_correspondence: dict[str, Alignment] = {}
+        self.molecule_restrictions: Restrictions = {}
         self.page = 0
+        self.errors = False
     
-    def next_page(self):
-        self.page += 1
-        
-    def previous_page(self):
-        self.page -= 1
+    def align_page(self):
+        print('Before ', self.page)
+        self.page = 1
+        print('After ', self.page)
