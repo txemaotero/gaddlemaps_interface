@@ -24,7 +24,8 @@ def add_molecule_component(
                 )
             )
             if itp_file is not None:
-                system.add_ftop(itp_file.name)
+                # system.add_ftop(itp_file.name)
+                system.add_ftop(itp_file)
                 mol_cg = system.different_molecules[-1]
                 molecule_correspondence[mol_cg.name] = Alignment(start=mol_cg)
                 represent_molecule(mol_cg)
@@ -45,7 +46,8 @@ def add_molecule_component(
                     )
                 )
                 if aa_gro is not None and aa_itp is not None:
-                    mol_aa = Molecule.from_files(aa_gro.name, aa_itp.name)
+                    mol_aa = Molecule.from_files(aa_gro, aa_itp)
+                    # mol_aa = Molecule.from_files(aa_gro.name, aa_itp.name)
                     molecule_correspondence[mol_cg.name].end = mol_aa
                     represent_molecule(mol_aa, style={"sphere": {"scale": 0.5}})
                     new_comp = True
@@ -71,11 +73,12 @@ def main_page(information: GlobalInformation):
 
         with col_info:
             if cg_system_gro is not None:
-                information.system = System(cg_system_gro.name)
+                information.system = System(cg_system_gro)
+                # information.system = System(cg_system_gro.name)
                 st.write("Detected residues:")
                 text = """| Resname   | Found |
-    | ----------- | ----------- |
-    """
+| ----------- | ----------- |
+"""
                 text += "\n".join(
                     [
                         "|" + "|".join([k, str(v)]) + "|"

@@ -1,3 +1,4 @@
+from io import StringIO
 from typing import IO, Optional
 from gaddlemaps import Alignment
 
@@ -7,6 +8,7 @@ import tempfile
 from gaddlemaps.components import Molecule
 from stmol import showmol
 
+from streamlit.uploaded_file_manager import UploadedFile
 
 def get_mol_view(
     gro_content: str, width: int = 400, height: int = 400, style: dict = None
@@ -71,7 +73,7 @@ def represent_molecule(
     showmol(view, height=height, width=width)
 
 
-def write_and_get_file(uploaded_file: Optional[IO[bytes]]) -> Optional[IO[bytes]]:
+def write_and_get_file(uploaded_file: Optional[UploadedFile]) -> Optional[StringIO]:
     """
     Takes a file uploaded by streamlit and writes it to a temporary file.
 
@@ -88,12 +90,11 @@ def write_and_get_file(uploaded_file: Optional[IO[bytes]]) -> Optional[IO[bytes]
     """
     if uploaded_file is None:
         return None
-    suff = uploaded_file.name.split(".")[-1]
-    temp = tempfile.NamedTemporaryFile(suffix="." + suff)
-    text = uploaded_file.read()
-    temp.write(text)
-    temp.seek(0)
-    return temp
+    name = uploaded_file.name
+    fopen = StringIO(uploaded_file.getvalue().decode("utf-8"))
+    fopen.mode = 'r'
+    fopen.name = name
+    return fopen
 
 
 class GlobalInformation:
