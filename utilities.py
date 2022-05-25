@@ -1,9 +1,12 @@
+import sys
 from io import StringIO
-from typing import IO, Optional
-from gaddlemaps import Alignment
+from typing import Optional
+from gaddlemaps import Alignment, Manager
+import streamlit as st
+from streamlit.scriptrunner import get_script_run_ctx
 
 import py3Dmol
-import tempfile
+from contextlib import contextmanager
 
 from gaddlemaps.components import Molecule
 from stmol import showmol
@@ -14,7 +17,7 @@ Restrictions = dict[str, Optional[list[tuple[int, int]]]]
 
 
 def get_mol_view(
-    gro_content: str, width: int = 400, height: int = 400, style: dict = None
+    gro_content: str, width: int = 400, height: int = 400, style: dict = None, view: Optional[py3Dmol.view] = None
 ) -> py3Dmol.view:
     """
     Takes the content of a .gro file and returns a py3Dmol.view object
@@ -40,7 +43,8 @@ def get_mol_view(
     """
     if style is None:
         style = {"sphere": {}}
-    view = py3Dmol.view(width=width, height=height)
+    if view is None:
+        view = py3Dmol.view(width=width, height=height)
     view.addModel(gro_content, "gro")
     view.setStyle(style)
     view.center()
@@ -63,18 +67,31 @@ def get_mol_view(
 
 
 def represent_molecule(
-    molecule: Molecule, width: int = 400, height: int = 400, style: dict = None
-):
+    molecule: Molecule, width: int = 400, height: int = 400, style: dict = None, return_showmol=True, view: Optional[py3Dmol.view] = None
+) -> Optional[py3Dmol.view]:
     lines = ["test", f"{len(molecule)}"]
     for atom in molecule:
         atom = atom.copy()
-        # atom.position *= 1.1  # convert to angstrom
         lines.append(atom.gro_line(parsed=False))
     lines += ["    0.0000    0.0000    0.0000"]
     gro_content = "\n".join(lines)
-    view = get_mol_view(gro_content, width=width, height=height, style=style)
-    showmol(view, height=height, width=width)
+    view = get_mol_view(gro_content, width=width, height=height, style=style, view=view)
+    if return_showmol:
+        showmol(view, height=height, width=width)
+        return None
+    else:
+        return view
 
+def represent_molecule_comparative(
+    align: Alignment, width: int = 400, height: int = 400
+):
+    align.start.resnames = 'START'  # type: ignore
+    align.end.resnames = 'END'  # type: ignore
+    view1 = represent_molecule(align.end, width=width, height=height, return_showmol=False)
+    view = represent_molecule(align.start, view=view1, return_showmol=False)
+    view.setStyle({'resn': 'START'}, {'sphere': {'scale': 1.5, 'opacity': 0.7}})
+    view.setStyle({'resn': 'END'}, {'sphere': {'scale': 0.5}})
+    showmol(view, height=height, width=width)
 
 def write_and_get_file(uploaded_file: Optional[UploadedFile]) -> Optional[StringIO]:
     """
@@ -102,14 +119,55 @@ def write_and_get_file(uploaded_file: Optional[UploadedFile]) -> Optional[String
 
 class GlobalInformation:
     def __init__(self):
-        print('Initializing')
         self.system = None
         self.molecule_correspondence: dict[str, Alignment] = {}
         self.molecule_restrictions: Restrictions = {}
-        self.page = 0
         self.errors = False
-    
-    def align_page(self):
-        print('Before ', self.page)
-        self.page = 1
-        print('After ', self.page)
+        self.manager = None
+        self.cg_system_name = ''
+        
+    def init_manager(self):
+        self.manager = Manager(self.system)
+        self.manager.molecule_correspondence = self.molecule_correspondence
+        
+    def align_molecules(self):
+        if self.manager is None:
+            self.init_manager()
+        self.manager.align_molecules(restrictions=self.molecule_restrictions)
+
+
+@contextmanager
+def st_redirect(src, dst):
+    placeholder = st.empty()
+    output_func = getattr(placeholder, dst)
+
+    with StringIO() as buffer:
+        old_write = src.write
+
+        def new_write(b):
+            if get_script_run_ctx():
+                buffer.write(b + '')
+                all_lines = buffer.getvalue().split('\n')
+                try:
+                    index = all_lines.index('Calculating exchange maps...')
+                    lines, end = all_lines[:index], all_lines[index:]
+                except ValueError:
+                    lines, end = all_lines, []
+                    
+                headers, chis = lines[0::4], lines[2::4]
+                value = '\n\n'.join([i + '\n\n' + (j.split('\r')[-1] if j else 'Chi2') for i, j in zip(headers, chis)])
+                output_func(value + '\n\n' + '\n\n'.join(end) + '')
+            else:
+                old_write(b)
+        try:
+            src.write = new_write
+            yield
+        finally:
+            src.write = old_write
+
+
+@contextmanager
+def st_stdout(dst):
+    "this will show the prints"
+    with st_redirect(sys.stdout, dst):
+        yield

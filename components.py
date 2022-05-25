@@ -93,6 +93,7 @@ def main_page(information: GlobalInformation):
 
         with col_info:
             if cg_system_gro is not None:
+                information.cg_system_name = cg_system_gro.name.split("/")[-1].split(".")[0]
                 information.system = System(cg_system_gro)
                 # information.system = System(cg_system_gro.name)
                 st.write("Detected residues:")
@@ -119,15 +120,6 @@ def main_page(information: GlobalInformation):
                 unsafe_allow_html=True,
             )
             add_molecule_component(information)
-
-    if information.errors:
-        st.info("Please, check the errors before continuing")
-    elif information.molecule_correspondence and any(
-        (ali.start is not None) and (ali.end is not None)
-        for ali in information.molecule_correspondence.values()
-    ):
-        st.button("Next Step: Align molecules", on_click=lambda : information.align_page())
-        print(information.page)
         
 
 def align_page(information: GlobalInformation):
