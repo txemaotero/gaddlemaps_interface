@@ -61,10 +61,16 @@ def restriction_selection(information: GlobalInformation, mol_name: str):
     st.markdown('__To find the indexes of the atoms you can hover over them in the 3D view__')
     col1, col2 = st.columns(2)
     with col1:
+        options = list(range(1, len(information.molecule_correspondence[mol_name].start) + 1)) 
+        def update_options():
+            st.session_state.options_cg.append(1)
+
+        st.session_state.options_cg = options
         cg_rest = st.multiselect(
             "Select atom index in the low resolution system:",
-            list(range(1, len(information.molecule_correspondence[mol_name].start) + 1)),
+            st.session_state.options_cg,
             key=f"cg_rest_{mol_name}",
+            on_change=update_options
         )
     with col2:
         aa_rest = st.multiselect(
@@ -75,6 +81,8 @@ def restriction_selection(information: GlobalInformation, mol_name: str):
     if len(cg_rest) != len(aa_rest):
         information.errors = True
         st.error("The number of selections must be the same in both resolutions")
+    else:
+        information.molecule_restrictions[mol_name] = list(zip(cg_rest, aa_rest))
 
 
 def main_page(information: GlobalInformation):
