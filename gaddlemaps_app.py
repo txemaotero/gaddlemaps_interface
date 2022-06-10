@@ -118,7 +118,6 @@ elif information.molecule_correspondence and any(
 ):
     run_mapping_and_download(information)
 
-st.markdown("----")
 st.markdown("# Do you need help?")
 st.markdown("""If you struggle to use this interface or you find any problem or
                bug you can check out the issues section of the repository with [this

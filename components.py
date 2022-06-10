@@ -57,11 +57,11 @@ def upload_system_and_molecules(information: GlobalInformation):
                 st.warning(
                     "To continue, you need to upload a .gro file with the system to be mapped"
                 )
+        st.markdown("----")
 
     # Second step: upload low res topology and high res molecules only if system is defined
     if information.system is not None:
         with st.container():
-            st.markdown("----")
             st.markdown("## 2. Molecule recognition")
             st.markdown("""In this step you will be assigning the correspondence
                         between the molecules in the uploaded system and in the
@@ -295,8 +295,8 @@ def run_mapping_and_download(information: GlobalInformation):
             with cols[index % 2]:
                 st.markdown(f"#### {index + 1}. {mol_name}")
                 represent_molecule_comparative(ali)
+    st.markdown("----")
     if pressed_align:
-        st.markdown("----")
         st.markdown("## 4. Download the mapped system")
         st.markdown(
             """If the alignment is correct, you can download the .gro file with
@@ -316,3 +316,4 @@ def run_mapping_and_download(information: GlobalInformation):
             temp_gro.read(),
             file_name=information.cg_system_name + "_mapped.gro",
         )
+        st.markdown("----")
